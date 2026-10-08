@@ -1,0 +1,23 @@
+{
+  "name": "vcards",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Carte de visite numérique avec QR Code, installable en PWA",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "gen:images": "node scripts/gen-placeholders.mjs"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.29",
+    "tailwindcss": "^3.4.19",
+    "vite": "^7.3.7",
+    "vite-plugin-pwa": "^2.0.0"
+  }
+}

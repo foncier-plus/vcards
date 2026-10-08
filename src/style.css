@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Personnalisation des couleurs (aucune couleur dans le formulaire)
+   --------------------------------------------------------------------------- */
+:root {
+  /* QR Code */
+  --qr-fg: #193E52; /* modules */
+  --qr-bg: #ffffff; /* fond */
+  --qr-tl: #5F70AF; /* carré haut-gauche */
+  --qr-tr: #578B64; /* carré haut-droit */
+  --qr-bl: #E07E5F; /* carré bas-gauche */
+
+  /* Carte de visite */
+  --card-bg: #ffffff;
+  --card-text: #0f172a;
+  --card-muted: #64748b;
+  --card-accent: #0f172a;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500;
+  }
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition;
+  }
+  .btn-primary {
+    @apply bg-slate-900 text-white hover:bg-slate-700;
+  }
+  .btn-ghost {
+    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+  .card-surface {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+}
+
+@layer components {
+  .vcard {
+    background-color: var(--card-bg);
+    color: var(--card-text);
+  }
+  .vcard__accent {
+    background-color: var(--card-accent);
+  }
+  .vcard__muted {
+    color: var(--card-muted);
+  }
+}
