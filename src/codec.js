@@ -1,8 +1,10 @@
 /**
- * Encodage / decodage de la carte dans le parametre ?q=
- * JSON -> UTF-8 -> base64url (compatible URL / QR).
+ * Données de la carte de visite.
+ * Stockage local (localStorage) : plus fiable qu'un paramètre d'URL.
  * Les couleurs ne sont pas stockées : elles se règlent dans le CSS.
  */
+
+const STORAGE_KEY = 'vcard';
 
 const DEFAULTS = {
   v: 1,
@@ -14,23 +16,6 @@ const DEFAULTS = {
   org: '',
   role: '',
 };
-
-function toBase64Url(bytes) {
-  let bin = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-  }
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function fromBase64Url(value) {
-  let base64 = String(value).replace(/-/g, '+').replace(/_/g, '/');
-  while (base64.length % 4) base64 += '=';
-  const bin = atob(base64);
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-  return bytes;
-}
 
 export function mergeCard(input) {
   const src = input && typeof input === 'object' ? input : {};
@@ -47,18 +32,25 @@ export function mergeCard(input) {
   };
 }
 
-export function encodeCard(data) {
-  const clean = mergeCard(data);
-  const bytes = new TextEncoder().encode(JSON.stringify(clean));
-  return toBase64Url(bytes);
+export function loadCard() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return mergeCard(JSON.parse(raw));
+  } catch (error) {
+    console.warn('Carte locale illisible', error);
+    return null;
+  }
 }
 
-export function decodeCard(value) {
-  if (!value) return null;
-  const bytes = fromBase64Url(value);
-  const json = new TextDecoder().decode(bytes);
-  const parsed = JSON.parse(json);
-  return mergeCard(parsed);
+export function saveCard(data) {
+  const clean = mergeCard(data);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+  return clean;
+}
+
+export function clearCard() {
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 export function buildVCard(d) {
@@ -76,10 +68,4 @@ export function buildVCard(d) {
     'END:VCARD',
   ].filter(Boolean);
   return lines.join('\r\n');
-}
-
-export function buildCardUrl(data, base) {
-  const origin = base || (typeof location !== 'undefined' ? location.origin : '');
-  const code = encodeCard(data);
-  return `${origin}/?q=${code}`;
 }

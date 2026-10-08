@@ -1,19 +1,9 @@
 import './style.css';
-import { decodeCard, encodeCard, mergeCard, buildVCard } from './codec.js';
+import { loadCard, saveCard, mergeCard, buildVCard } from './codec.js';
 import { renderQrSvg } from './qr.js';
 
 const app = document.getElementById('app');
-const params = new URLSearchParams(window.location.search);
-const rawQuery = params.get('q') || '';
-
-let current = mergeCard(null);
-if (rawQuery) {
-  try {
-    current = decodeCard(rawQuery);
-  } catch (error) {
-    console.warn('Paramètre ?q= invalide', error);
-  }
-}
+const current = loadCard() || mergeCard(null);
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => {
@@ -59,7 +49,7 @@ function render() {
         <header>
           <a href="/" class="text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-600">← Carte de visite</a>
           <h1 class="mt-1 text-2xl font-bold">Éditer la carte</h1>
-          <p class="text-sm text-slate-500">Renseignez les informations puis générez le lien de la carte.</p>
+          <p class="text-sm text-slate-500">Renseignez les informations puis enregistrez la carte.</p>
         </header>
 
         <section class="card-surface p-5">
@@ -70,15 +60,13 @@ function render() {
         </section>
 
         <section class="space-y-2">
-          <label class="label" for="link">Lien généré</label>
-          <div class="flex gap-2">
-            <input id="link" class="field" type="text" readonly />
-            <button id="copy" type="button" class="btn btn-ghost shrink-0">Copier</button>
-          </div>
-          <p class="text-xs text-slate-400">Le QR Code encode une fiche contact (vCard). Les couleurs se règlent dans le CSS (<code>src/style.css</code>).</p>
+          <p class="text-xs text-slate-400">
+            La carte est enregistrée dans ce navigateur. Le QR Code encode une fiche contact (vCard).
+            Les couleurs se règlent dans le CSS (<code>src/style.css</code>).
+          </p>
           <div class="flex flex-wrap gap-2 pt-1">
-            <button type="submit" class="btn btn-primary">Afficher la carte</button>
-            <a id="open" href="/" class="btn btn-ghost">Ouvrir</a>
+            <button type="submit" class="btn btn-primary">Enregistrer la carte</button>
+            <a href="/" class="btn btn-ghost">Annuler</a>
           </div>
         </section>
       </form>
@@ -115,23 +103,10 @@ function readForm() {
   return mergeCard(data);
 }
 
-function currentUrl(data) {
-  const code = encodeCard(data);
-  const url = new URL(window.location.origin + '/');
-  url.searchParams.set('q', code);
-  return url.toString();
-}
-
 function refresh() {
   const data = readForm();
-  const link = currentUrl(data);
 
-  const linkInput = document.getElementById('link');
-  linkInput.value = link;
-  document.getElementById('open').href = link;
-
-  const payload = buildVCard(data);
-  document.getElementById('previewQr').innerHTML = renderQrSvg(payload, { margin: 1 });
+  document.getElementById('previewQr').innerHTML = renderQrSvg(buildVCard(data), { margin: 1 });
 
   document.getElementById('previewName').textContent =
     [data.firstName, data.lastName].filter(Boolean).join(' ') || 'Nom Prénom';
@@ -140,7 +115,7 @@ function refresh() {
   document.getElementById('previewPhone').textContent = data.phone;
   document.getElementById('previewEmail').textContent = data.email;
 
-  return { data, link };
+  return data;
 }
 
 function bind() {
@@ -148,21 +123,8 @@ function bind() {
   form.addEventListener('input', refresh);
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const { link } = refresh();
-    window.location.href = link;
-  });
-
-  document.getElementById('copy').addEventListener('click', async () => {
-    const linkInput = document.getElementById('link');
-    const button = document.getElementById('copy');
-    try {
-      await navigator.clipboard.writeText(linkInput.value);
-      button.textContent = 'Copié !';
-      setTimeout(() => (button.textContent = 'Copier'), 1500);
-    } catch {
-      linkInput.select();
-      document.execCommand('copy');
-    }
+    saveCard(refresh());
+    window.location.href = '/';
   });
 }
 

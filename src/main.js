@@ -1,10 +1,8 @@
 import './style.css';
-import { decodeCard, buildVCard } from './codec.js';
+import { loadCard, buildVCard } from './codec.js';
 import { renderQrSvg } from './qr.js';
 
 const app = document.getElementById('app');
-const params = new URLSearchParams(window.location.search);
-const rawQuery = params.get('q') || '';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => {
@@ -25,8 +23,9 @@ function escapeHtml(value) {
 
 function emptyState() {
   return `
-    <div class="flex min-h-screen items-center justify-center bg-white p-6">
+    <div class="flex min-h-screen flex-col items-center justify-center gap-8 bg-white p-6">
       <img src="/logo.png" alt="Logo" class="w-72 max-w-[80%]" />
+      <a href="/edit" class="btn btn-primary">Créer la carte de visite</a>
     </div>
   `;
 }
@@ -34,18 +33,18 @@ function emptyState() {
 function renderCard(data) {
   const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ') || 'Nom Prénom';
   const subtitle = [data.role, data.org].filter(Boolean).join(' · ');
-  const editHref = '/edit' + (rawQuery ? `?q=${rawQuery}` : '');
 
   return `
-    <div class="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-5 p-4">
+    <div class="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center p-4">
       <article
         id="card"
-        class="vcard relative grid aspect-[9/16] w-full max-w-sm grid-rows-[auto_minmax(0,1fr)_auto] items-center overflow-hidden rounded-[28px] px-6 py-8 shadow-xl"
+        title="Double-cliquez pour éditer"
+        class="vcard relative grid aspect-[9/16] w-full max-w-sm cursor-pointer select-none grid-rows-[auto_minmax(0,1fr)_auto] items-center overflow-hidden rounded-[28px] px-6 py-8 shadow-xl"
       >
         <div class="vcard__accent pointer-events-none absolute inset-x-0 top-0 h-1.5"></div>
 
         <header class="flex w-full items-center justify-center">
-          <img src="/logo.png" alt="Logo" class="h-auto w-48 max-w-[65%] object-contain" />
+          <img src="/logo.png" alt="Logo" class="h-auto h-24 max-w-[80%] object-contain" />
         </header>
 
         <main class="flex min-h-0 w-full items-center justify-center py-4">
@@ -60,53 +59,17 @@ function renderCard(data) {
               : ''
           }
           <div class="mt-3 space-y-1 text-sm">
-          ${data.email ? `<p class="break-all">${escapeHtml(data.email)}</p>` : ''}
             ${data.phone ? `<p>${escapeHtml(data.phone)}</p>` : ''}
+            ${data.email ? `<p class="break-all">${escapeHtml(data.email)}</p>` : ''}
           </div>
         </footer>
       </article>
-
-      <div class="flex flex-wrap items-center justify-center gap-2">
-        <a href="${escapeHtml(editHref)}" class="btn btn-ghost">Éditer</a>
-        <button id="install" type="button" hidden class="btn btn-primary">Installer l'application</button>
-      </div>
     </div>
   `;
 }
 
-function setupInstall() {
-  const installBtn = document.getElementById('install');
-  if (!installBtn) return;
-  let deferredPrompt = null;
-
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    installBtn.hidden = false;
-  });
-
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.hidden = true;
-  });
-
-  window.addEventListener('appinstalled', () => {
-    installBtn.hidden = true;
-  });
-}
-
 function init() {
-  let data = null;
-  if (rawQuery) {
-    try {
-      data = decodeCard(rawQuery);
-    } catch (error) {
-      console.warn('Paramètre ?q= invalide', error);
-    }
-  }
+  const data = loadCard();
 
   if (!data) {
     app.innerHTML = emptyState();
@@ -114,13 +77,14 @@ function init() {
   }
 
   app.innerHTML = renderCard(data);
-  const holder = document.getElementById('qr');
-  holder.innerHTML = renderQrSvg(buildVCard(data), { margin: 1 });
+  document.getElementById('qr').innerHTML = renderQrSvg(buildVCard(data), { margin: 1 });
 
   const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ');
   document.title = fullName ? `${fullName} · Carte de visite` : 'Carte de visite';
 
-  setupInstall();
+  document.getElementById('card').addEventListener('dblclick', () => {
+    window.location.href = '/edit';
+  });
 }
 
 init();

@@ -1,14 +1,14 @@
 # Carte de visite QR (PWA)
 
-Carte de visite numérique verticale avec QR Code SVG, éditable via une URL, installable en PWA.
+Carte de visite numérique verticale avec QR Code SVG, installable en PWA. Les données sont
+stockées dans le **localStorage** du navigateur (pas de paramètre d'URL).
 
 ## URLs
 
 | URL | Rôle |
 | --- | --- |
-| `/?q=<base64>` | Affiche la carte de visite (installable en PWA). Le `q` contient la carte encodée en base64url. |
-| `/edit` | Formulaire d'édition. Génère une URL `/?q=<base64>` puis redirige vers celle-ci. |
-| `/edit?q=<base64>` | Pré-remplit le formulaire pour modifier une carte existante. |
+| `/` | Affiche la carte enregistrée. Sans données : logo + bouton « Créer la carte de visite ». Double-clic sur la carte pour l'éditer. |
+| `/edit` | Formulaire d'édition (pré-rempli depuis le localStorage). Enregistre puis revient sur `/`. |
 
 ## Stack
 
@@ -75,7 +75,7 @@ Les classes `.vcard`, `.vcard__accent` et `.vcard__muted` les appliquent.
 
 ### CSS des pages
 - Styles Tailwind + variables : `src/style.css`
-- Carte (page `/?q=`): `src/main.js` (fonction `renderCard`)
+- Carte (page `/`): `src/main.js` (fonction `renderCard`)
 - Page d'édition : `src/edit.js` (fonction `render`)
 
 ## Contenu du QR Code

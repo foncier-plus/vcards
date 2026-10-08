@@ -15,9 +15,9 @@
 
   /* Carte de visite */
   --card-bg: #ffffff;
-  --card-text: #0f172a;
+  --card-text: #193E52;
   --card-muted: #64748b;
-  --card-accent: #0f172a;
+  --card-accent: #193E52;
 }
 
 @layer base {
